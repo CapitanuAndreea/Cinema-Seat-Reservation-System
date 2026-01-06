@@ -34,55 +34,16 @@ The system prevents double booking and persists all data in a relational databas
 5. **Cancel Reservation**  
    Cancel an existing reservation and free the associated seats.
 
-## 4. Entities
+## Entities
 
-1. **Cinema**
-   - id
-   - name
-   - city
-
-2. **Hall**
-   - id
-   - name
-   - cinema (Many-to-One)
-
-3. **Seat**
-   - id
-   - row
-   - number
-   - hall (Many-to-One)
-
-4. **Movie**
-   - id
-   - title
-   - durationMinutes
-   - rating
-   - description
-
-5. **Screening**
-   - id
-   - startTime
-   - price
-   - movie (Many-to-One)
-   - hall (Many-to-One)
-
-6. **Customer**
-   - id
-   - fullName
-   - email
-
-7. **Reservation**
-   - id
-   - status (PENDING, CONFIRMED, CANCELLED)
-   - createdAt
-   - customer (Many-to-One)
-   - screening (Many-to-One)
-
-8. **ReservationSeat** (Join Entity)
-   - id
-   - reservation (Many-to-One)
-   - screening (Many-to-One)
-   - seat (Many-to-One)
+1. Cinema
+2. Hall
+3. Seat
+4. Movie
+5. Screening
+6. Customer
+7. Reservation
+8. ReservationSeat (Join Entity)
 
 ## Entity Relationships
 
