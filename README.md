@@ -4,8 +4,6 @@ This project is a Spring Boot REST application that manages seat reservations fo
 Customers can view available movies and screenings, select seats by row and number, create reservations, and cancel them.  
 The system prevents double booking and persists all data in a relational database.
 
----
-
 ## Business Requirements
 
 1. The system must manage cinemas with one or more halls.
@@ -18,8 +16,6 @@ The system prevents double booking and persists all data in a relational databas
 8. A reservation must contain one or more selected seats.
 9. The system must prevent double booking of the same seat for the same screening.
 10. Customers must be able to cancel a reservation, releasing the reserved seats.
-
----
 
 ## MVP Features
 
@@ -37,8 +33,6 @@ The system prevents double booking and persists all data in a relational databas
 
 5. **Cancel Reservation**  
    Cancel an existing reservation and free the associated seats.
-
----
 
 ## 4. Entities
 
@@ -90,8 +84,6 @@ The system prevents double booking and persists all data in a relational databas
    - screening (Many-to-One)
    - seat (Many-to-One)
 
----
-
 ## Entity Relationships
 
 - One **Cinema** has many **Halls**
@@ -103,8 +95,6 @@ The system prevents double booking and persists all data in a relational databas
 - One **Reservation** has many **ReservationSeats**
 - One **Seat** can appear in many **ReservationSeats** (for different screenings)
 
----
-
 ## Business Rules & Constraints
 
 - Seat `(row, number)` must be unique within a hall.
@@ -113,9 +103,7 @@ The system prevents double booking and persists all data in a relational databas
 - Canceling a reservation changes its status to `CANCELLED` and removes associated ReservationSeat records.
 - Email address of a customer must be unique.
 
----
-
-## 7. REST API Overview
+## REST API Overview
 
 - `GET /movies`
 - `POST /movies`
