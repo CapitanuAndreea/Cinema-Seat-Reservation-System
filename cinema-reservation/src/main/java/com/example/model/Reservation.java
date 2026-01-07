@@ -1,6 +1,5 @@
 package com.example.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -19,7 +18,6 @@ public class Reservation {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "screening_id", nullable = false)
-    @JsonIgnoreProperties({"movie", "hall"})
     private Screening screening;
 
     @Enumerated(EnumType.STRING)

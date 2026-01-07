@@ -1,8 +1,11 @@
 package com.example.controller;
 
-import com.example.model.Cinema;
-import com.example.repository.CinemaRepository;
+import com.example.model.dto.CinemaResponse;
+import com.example.model.dto.CreateCinemaRequest;
+import com.example.service.CinemaService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,26 +14,25 @@ import java.util.List;
 @RequestMapping("/api/cinemas")
 public class CinemaController {
 
-    private final CinemaRepository cinemaRepository;
+    private final CinemaService cinemaService;
 
-    public CinemaController(CinemaRepository cinemaRepository) {
-        this.cinemaRepository = cinemaRepository;
+    public CinemaController(CinemaService cinemaService) {
+        this.cinemaService = cinemaService;
     }
 
     @GetMapping
-    public List<Cinema> getAll() {
-        return cinemaRepository.findAll();
+    public ResponseEntity<List<CinemaResponse>> getAll() {
+        return ResponseEntity.ok(cinemaService.findAll());
     }
 
     @GetMapping("/{id}")
-    public Cinema getById(@PathVariable Long id) {
-        return cinemaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cinema not found with id=" + id));
+    public ResponseEntity<CinemaResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(cinemaService.findById(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Cinema create(@RequestBody Cinema cinema) {
-        return cinemaRepository.save(cinema);
+    public ResponseEntity<CinemaResponse> create(@RequestBody @Valid CreateCinemaRequest request) {
+        CinemaResponse response = cinemaService.add(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

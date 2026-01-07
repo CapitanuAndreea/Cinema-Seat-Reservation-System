@@ -1,8 +1,11 @@
 package com.example.controller;
 
-import com.example.model.Customer;
-import com.example.repository.CustomerRepository;
+import com.example.model.dto.CreateCustomerRequest;
+import com.example.model.dto.CustomerResponse;
+import com.example.service.CustomerService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,20 +14,25 @@ import java.util.List;
 @RequestMapping("/api/customers")
 public class CustomerController {
 
-    private final CustomerRepository customerRepository;
+    private final CustomerService customerService;
 
-    public CustomerController(CustomerRepository customerRepository) {
-        this.customerRepository = customerRepository;
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
     }
 
     @GetMapping
-    public List<Customer> getAll() {
-        return customerRepository.findAll();
+    public ResponseEntity<List<CustomerResponse>> getAll() {
+        return ResponseEntity.ok(customerService.findAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CustomerResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(customerService.findById(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Customer create(@RequestBody Customer customer) {
-        return customerRepository.save(customer);
+    public ResponseEntity<CustomerResponse> create(@RequestBody @Valid CreateCustomerRequest request) {
+        CustomerResponse response = customerService.add(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

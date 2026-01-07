@@ -1,10 +1,11 @@
 package com.example.controller;
 
-import com.example.model.Hall;
-import com.example.model.Seat;
-import com.example.repository.HallRepository;
-import com.example.repository.SeatRepository;
+import com.example.model.dto.CreateSeatRequest;
+import com.example.model.dto.SeatResponse;
+import com.example.service.SeatService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,33 +14,25 @@ import java.util.List;
 @RequestMapping("/api/seats")
 public class SeatController {
 
-    private final SeatRepository seatRepository;
-    private final HallRepository hallRepository;
+    private final SeatService seatService;
 
-    public SeatController(SeatRepository seatRepository, HallRepository hallRepository) {
-        this.seatRepository = seatRepository;
-        this.hallRepository = hallRepository;
+    public SeatController(SeatService seatService) {
+        this.seatService = seatService;
     }
 
     @GetMapping
-    public List<Seat> getAll() {
-        return seatRepository.findAll();
+    public ResponseEntity<List<SeatResponse>> getAll() {
+        return ResponseEntity.ok(seatService.findAll());
     }
 
     @GetMapping("/by-hall/{hallId}")
-    public List<Seat> getByHall(@PathVariable Long hallId) {
-        return seatRepository.findByHallId(hallId);
+    public ResponseEntity<List<SeatResponse>> getByHall(@PathVariable Long hallId) {
+        return ResponseEntity.ok(seatService.findByHall(hallId));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Seat create(@RequestBody CreateSeatRequest request) {
-        Hall hall = hallRepository.findById(request.hallId())
-                .orElseThrow(() -> new RuntimeException("Hall not found with id=" + request.hallId()));
-
-        Seat seat = new Seat(request.rowNumber(), request.seatNumber(), hall);
-        return seatRepository.save(seat);
+    public ResponseEntity<SeatResponse> create(@RequestBody @Valid CreateSeatRequest request) {
+        SeatResponse response = seatService.addSeat(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
-    public record CreateSeatRequest(Integer rowNumber, Integer seatNumber, Long hallId) {}
 }

@@ -1,6 +1,11 @@
 package com.example.service;
 
+import com.example.exceptions.BadRequestException;
+import com.example.exceptions.NotFoundException;
 import com.example.model.*;
+import com.example.model.dto.CreateReservationRequest;
+import com.example.model.dto.ReservationResponse;
+import com.example.model.dto.ReservedSeatResponse;
 import com.example.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,47 +33,82 @@ public class ReservationService {
         this.reservationSeatRepository = reservationSeatRepository;
     }
 
-    @Transactional
-    public Reservation createReservation(Long customerId, Long screeningId, List<Long> seatIds) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Customer not found with id=" + customerId));
+    public ReservationResponse findById(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new NotFoundException("Reservation not found with id=" + reservationId));
+        return toResponse(reservation);
+    }
 
-        Screening screening = screeningRepository.findById(screeningId)
-                .orElseThrow(() -> new RuntimeException("Screening not found with id=" + screeningId));
+    public List<ReservedSeatResponse> getSeats(Long reservationId) {
+        // Ensure reservation exists
+        if (!reservationRepository.existsById(reservationId)) {
+            throw new NotFoundException("Reservation not found with id=" + reservationId);
+        }
+
+        return reservationSeatRepository.findByReservationId(reservationId).stream()
+                .map(rs -> new ReservedSeatResponse(
+                        rs.getSeat().getId(),
+                        rs.getSeat().getRowNumber(),
+                        rs.getSeat().getSeatNumber()
+                ))
+                .toList();
+    }
+
+    @Transactional
+    public ReservationResponse create(CreateReservationRequest request) {
+        Customer customer = customerRepository.findById(request.customerId())
+                .orElseThrow(() -> new NotFoundException("Customer not found with id=" + request.customerId()));
+
+        Screening screening = screeningRepository.findById(request.screeningId())
+                .orElseThrow(() -> new NotFoundException("Screening not found with id=" + request.screeningId()));
 
         // Create reservation first
         Reservation reservation = reservationRepository.save(new Reservation(customer, screening));
 
-        // For each seat validate and reserve
-        for (Long seatId : seatIds) {
+        // Reserve seats
+        for (Long seatId : request.seatIds()) {
             Seat seat = seatRepository.findById(seatId)
-                    .orElseThrow(() -> new RuntimeException("Seat not found with id=" + seatId));
+                    .orElseThrow(() -> new NotFoundException("Seat not found with id=" + seatId));
 
-            // Seat must belong to the same hall as the screening
+            // seat must belong to same hall as screening
             if (!seat.getHall().getId().equals(screening.getHall().getId())) {
-                throw new RuntimeException("Seat " + seatId + " does not belong to screening hall");
+                throw new BadRequestException("Seat " + seatId + " does not belong to the screening hall");
             }
 
-            // Prevent double booking
-            if (reservationSeatRepository.existsByScreeningIdAndSeatId(screeningId, seatId)) {
-                throw new RuntimeException("Seat " + seatId + " is already reserved for this screening");
+            // no double booking
+            if (reservationSeatRepository.existsByScreeningIdAndSeatId(screening.getId(), seatId)) {
+                throw new BadRequestException("Seat " + seatId + " is already reserved for this screening");
             }
 
             reservationSeatRepository.save(new ReservationSeat(reservation, screening, seat));
         }
 
-        return reservation;
+        return toResponse(reservation);
     }
 
     @Transactional
-    public void cancelReservation(Long reservationId) {
+    public void cancel(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found with id=" + reservationId));
+                .orElseThrow(() -> new NotFoundException("Reservation not found with id=" + reservationId));
+
+        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
+            throw new BadRequestException("Reservation is already cancelled");
+        }
 
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationRepository.save(reservation);
 
-        // Free seats by deleting join rows
+        // Free seats
         reservationSeatRepository.deleteByReservationId(reservationId);
+    }
+
+    private ReservationResponse toResponse(Reservation reservation) {
+        return new ReservationResponse(
+                reservation.getId(),
+                reservation.getCustomer().getId(),
+                reservation.getScreening().getId(),
+                reservation.getStatus(),
+                reservation.getCreatedAt()
+        );
     }
 }

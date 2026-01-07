@@ -1,10 +1,12 @@
 package com.example.controller;
 
-import com.example.model.Reservation;
-import com.example.repository.ReservationRepository;
-import com.example.repository.ReservationSeatRepository;
+import com.example.model.dto.CreateReservationRequest;
+import com.example.model.dto.ReservationResponse;
+import com.example.model.dto.ReservedSeatResponse;
 import com.example.service.ReservationService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,39 +16,30 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final ReservationRepository reservationRepository;
-    private final ReservationSeatRepository reservationSeatRepository;
 
-    public ReservationController(ReservationService reservationService,
-                                 ReservationRepository reservationRepository,
-                                 ReservationSeatRepository reservationSeatRepository) {
+    public ReservationController(ReservationService reservationService) {
         this.reservationService = reservationService;
-        this.reservationRepository = reservationRepository;
-        this.reservationSeatRepository = reservationSeatRepository;
     }
 
     @GetMapping("/{id}")
-    public Reservation getById(@PathVariable Long id) {
-        return reservationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reservation not found with id=" + id));
+    public ResponseEntity<ReservationResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.findById(id));
     }
 
     @GetMapping("/{id}/seats")
-    public List<?> getReservedSeats(@PathVariable Long id) {
-        return reservationSeatRepository.findByReservationId(id);
+    public ResponseEntity<List<ReservedSeatResponse>> getSeats(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.getSeats(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Reservation create(@RequestBody CreateReservationRequest request) {
-        return reservationService.createReservation(request.customerId(), request.screeningId(), request.seatIds());
+    public ResponseEntity<ReservationResponse> create(@RequestBody @Valid CreateReservationRequest request) {
+        ReservationResponse response = reservationService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}/cancel")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void cancel(@PathVariable Long id) {
-        reservationService.cancelReservation(id);
+    public ResponseEntity<Void> cancel(@PathVariable Long id) {
+        reservationService.cancel(id);
+        return ResponseEntity.noContent().build();
     }
-
-    public record CreateReservationRequest(Long customerId, Long screeningId, List<Long> seatIds) {}
 }

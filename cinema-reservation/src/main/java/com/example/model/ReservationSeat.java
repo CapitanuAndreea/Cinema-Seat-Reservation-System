@@ -1,6 +1,5 @@
 package com.example.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -18,17 +17,14 @@ public class ReservationSeat {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "reservation_id", nullable = false)
-    @JsonIgnoreProperties({"customer", "screening"})
     private Reservation reservation;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "screening_id", nullable = false)
-    @JsonIgnoreProperties({"movie", "hall"})
     private Screening screening;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "seat_id", nullable = false)
-    @JsonIgnoreProperties({"hall"})
     private Seat seat;
 
     protected ReservationSeat() {}

@@ -1,10 +1,11 @@
 package com.example.controller;
 
-import com.example.model.Cinema;
-import com.example.model.Hall;
-import com.example.repository.CinemaRepository;
-import com.example.repository.HallRepository;
+import com.example.model.dto.CreateHallRequest;
+import com.example.model.dto.HallResponse;
+import com.example.service.HallService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,39 +14,25 @@ import java.util.List;
 @RequestMapping("/api/halls")
 public class HallController {
 
-    private final HallRepository hallRepository;
-    private final CinemaRepository cinemaRepository;
+    private final HallService hallService;
 
-    public HallController(HallRepository hallRepository, CinemaRepository cinemaRepository) {
-        this.hallRepository = hallRepository;
-        this.cinemaRepository = cinemaRepository;
+    public HallController(HallService hallService) {
+        this.hallService = hallService;
     }
 
     @GetMapping
-    public List<Hall> getAll() {
-        return hallRepository.findAll();
-    }
-
-    @GetMapping("/{id}")
-    public Hall getById(@PathVariable Long id) {
-        return hallRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Hall not found with id=" + id));
+    public ResponseEntity<List<HallResponse>> getAll() {
+        return ResponseEntity.ok(hallService.findAll());
     }
 
     @GetMapping("/by-cinema/{cinemaId}")
-    public List<Hall> getByCinema(@PathVariable Long cinemaId) {
-        return hallRepository.findByCinemaId(cinemaId);
+    public ResponseEntity<List<HallResponse>> getByCinema(@PathVariable Long cinemaId) {
+        return ResponseEntity.ok(hallService.findByCinema(cinemaId));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Hall create(@RequestBody CreateHallRequest request) {
-        Cinema cinema = cinemaRepository.findById(request.cinemaId())
-                .orElseThrow(() -> new RuntimeException("Cinema not found with id=" + request.cinemaId()));
-
-        Hall hall = new Hall(request.name(), cinema);
-        return hallRepository.save(hall);
+    public ResponseEntity<HallResponse> create(@RequestBody @Valid CreateHallRequest request) {
+        HallResponse response = hallService.addHall(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
-    public record CreateHallRequest(String name, Long cinemaId) {}
 }

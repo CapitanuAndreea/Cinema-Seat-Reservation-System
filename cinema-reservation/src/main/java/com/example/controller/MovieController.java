@@ -1,8 +1,11 @@
 package com.example.controller;
 
-import com.example.model.Movie;
-import com.example.repository.MovieRepository;
+import com.example.model.dto.CreateMovieRequest;
+import com.example.model.dto.MovieResponse;
+import com.example.service.MovieService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,48 +14,36 @@ import java.util.List;
 @RequestMapping("/api/movies")
 public class MovieController {
 
-    private final MovieRepository movieRepository;
+    private final MovieService movieService;
 
-    public MovieController(MovieRepository movieRepository) {
-        this.movieRepository = movieRepository;
+    public MovieController(MovieService movieService) {
+        this.movieService = movieService;
     }
 
     @GetMapping
-    public List<Movie> getAll() {
-        return movieRepository.findAll();
+    public ResponseEntity<List<MovieResponse>> getAll() {
+        return ResponseEntity.ok(movieService.findAll());
     }
 
     @GetMapping("/{id}")
-    public Movie getById(@PathVariable Long id) {
-        return movieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Movie not found with id=" + id));
+    public ResponseEntity<MovieResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(movieService.findById(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Movie create(@RequestBody Movie movie) {
-        return movieRepository.save(movie);
+    public ResponseEntity<MovieResponse> create(@RequestBody @Valid CreateMovieRequest request) {
+        MovieResponse response = movieService.add(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    public Movie update(@PathVariable Long id, @RequestBody Movie request) {
-        Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Movie not found with id=" + id));
-
-        movie.setTitle(request.getTitle());
-        movie.setDurationMinutes(request.getDurationMinutes());
-        movie.setRating(request.getRating());
-        movie.setDescription(request.getDescription());
-
-        return movieRepository.save(movie);
+    public ResponseEntity<MovieResponse> update(@PathVariable Long id, @RequestBody @Valid CreateMovieRequest request) {
+        return ResponseEntity.ok(movieService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        if (!movieRepository.existsById(id)) {
-            throw new RuntimeException("Movie not found with id=" + id);
-        }
-        movieRepository.deleteById(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        movieService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

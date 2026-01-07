@@ -1,7 +1,6 @@
 package com.example.model;
 
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(
@@ -21,7 +20,6 @@ public class Hall {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "cinema_id", nullable = false)
-    @JsonIgnoreProperties({"name", "city"})
     private Cinema cinema;
 
     protected Hall() {

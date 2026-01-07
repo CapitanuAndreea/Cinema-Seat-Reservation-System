@@ -1,6 +1,5 @@
 package com.example.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -21,12 +20,10 @@ public class Screening {
 
     @ManyToOne(optional = false) // default EAGER
     @JoinColumn(name = "movie_id", nullable = false)
-    @JsonIgnoreProperties({"durationMinutes", "rating", "description"})
     private Movie movie;
 
     @ManyToOne(optional = false) // default EAGER
     @JoinColumn(name = "hall_id", nullable = false)
-    @JsonIgnoreProperties({"name", "cinema"})
     private Hall hall;
 
     @Column(name = "start_time", nullable = false)
